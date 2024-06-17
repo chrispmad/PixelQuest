@@ -1,0 +1,69 @@
+.opening-screen {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: black;
+  position: absolute;
+  text-align: center;
+  overflow: hidden;
+  display: none;
+}
+
+.opening-screen-text {
+  top: 40%;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  position: absolute;
+  font-family: monospace;
+  color: white;
+}
+
+.gui-frame {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+
+.map-plot-frame {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+
+.char-plot-frame {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background: rgba(255, 255, 255, 0);
+}
+
+.gui-overlay{
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+
+h5 {
+  font-family: monospace;
+}
+
+.harp{
+  top: 1%;
+  right: 5%;
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background-size: contain;
+  z-index: 100;
+  background-image: url(data/entities/harp.PNG);
+}
