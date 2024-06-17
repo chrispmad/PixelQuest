@@ -3,6 +3,7 @@ library(bslib)
 library(shinyjs)
 library(ggplot2)
 library(tidyterra)
+library(leaflet)
 
 harp_btn = tags$audio(id = 'music',
                       src = 'https://patrickdearteaga.com/audio/Flutes%20for%20Misha.ogg?_=19',
@@ -40,27 +41,9 @@ gui = div(
   class = 'gui-frame'
 )
 
-# Map specific keyboard keys to do certain things.
-map_keys_js <- paste(
-  "$(document).on('keydown', function(event){
-     var key = event.which;
-     if(key === 37){
-      Shiny.setInputValue('key_left', true, {priority: 'event'});
-     } else if(key === 38){
-      Shiny.setInputValue('key_up', true, {priority: 'event'});
-     } else if(key === 39){
-      Shiny.setInputValue('key_right', true, {priority: 'event'});
-     } else if(key === 40){
-      Shiny.setInputValue('key_down', true, {priority: 'event'});
-     } else if(key === 32){
-      Shiny.setInputValue('key_spacebar', true, {priority: 'event'});
-     }
-  });"
-)
-
 ui <- page_fluid(
-  tags$head(tags$script(HTML(map_keys_js))),
   shiny::includeCSS('www/data/css/gui.css'),
+  shiny::includeScript('track_keyboard_keys.js'),
   shiny::includeScript('add_music_to_app.js'),
   useShinyjs(),
   jump_sound,
@@ -70,14 +53,10 @@ ui <- page_fluid(
 )
 
 server <- function(input, output, session) {
-  
-  print(getwd())
-  
+
   current_wd = getwd()
   if(!stringr::str_detect(current_wd, 'www$')) setwd(paste0(current_wd,'/www'))
-  
-  print(getwd())
-  
+
   # Load map(s). Maybe just the one the char is on.
   p_map_files = list.files('/data/maps/', pattern = '.gpkg') |> 
     lapply(sf::read_sf)
@@ -100,7 +79,8 @@ server <- function(input, output, session) {
   char_x = reactiveVal(NA)
   char_y = reactiveVal(NA)
   
-  observeEvent(input$key_esc, {
+  observe({
+    req(input$keys$escape)
     # The following function is not yet written
     pause_game()
     run_plots(FALSE)
@@ -167,7 +147,8 @@ server <- function(input, output, session) {
   player_current_el = reactiveVal(0)
   player_jump = reactiveVal(0)
   
-  observeEvent(input$key_spacebar, {
+  observe({
+    req(input$keys$spacebar)
     if(player_jump() == 0){
       # Give 5 'units' of global clock time (i.e. 500 ms) for jump
       player_jump(player_jump() + 5)
@@ -177,16 +158,26 @@ server <- function(input, output, session) {
   
   # Set up monsters
   
-  observeEvent(input$key_left, {
+  keys <- reactive({
+    input$keys
+  })
+  
+  observe({
+    req(input$keys$left)
     pending_move('left')
   })
-  observeEvent(input$key_right, {
+  observe({
+    req(input$keys$right)
+    print('right detected at ')
+    print(Sys.time())
     pending_move('right')
   })
-  observeEvent(input$key_up, {
+  observe({
+    req(input$keys$up)
     pending_move('up')
   })
-  observeEvent(input$key_down, {
+  observe({
+    req(input$keys$down)
     pending_move('down')
   })
   
@@ -215,7 +206,7 @@ server <- function(input, output, session) {
             coords = c('lng','lat'),
             crs = 4326
           )
-          new_elev = terra::extract(sm, terra::vect(pot_char_sf))[,2]
+          new_elev = terra::extract(current_map(), terra::vect(pot_char_sf))[,2]
           # Acceptable new elevation - it's within 1 level of difference!
           if(new_elev <= player_current_el() + 1 + floor(player_jump()/2) & new_elev >= player_current_el() - 1){
             char_lng(new_lng)
@@ -231,7 +222,7 @@ server <- function(input, output, session) {
             coords = c('lng','lat'),
             crs = 4326
           )
-          new_elev = terra::extract(sm, terra::vect(pot_char_sf))[,2]
+          new_elev = terra::extract(current_map(), terra::vect(pot_char_sf))[,2]
           # Acceptable new elevation - it's within 1 level of difference!
           if(new_elev <= player_current_el() + 1 + floor(player_jump()/2) & new_elev >= player_current_el() - 1){
             char_lng(new_lng)
@@ -247,7 +238,7 @@ server <- function(input, output, session) {
             coords = c('lng','lat'),
             crs = 4326
           )
-          new_elev = terra::extract(sm, terra::vect(pot_char_sf))[,2]
+          new_elev = terra::extract(current_map(), terra::vect(pot_char_sf))[,2]
           # Acceptable new elevation - it's within 1 level of difference!
           if(new_elev <= player_current_el() + 1 + floor(player_jump()/2) & new_elev >= player_current_el() - 1){
             char_lat(new_lat)
@@ -263,7 +254,7 @@ server <- function(input, output, session) {
             coords = c('lng','lat'),
             crs = 4326
           )
-          new_elev = terra::extract(sm, terra::vect(pot_char_sf))[,2]
+          new_elev = terra::extract(current_map(), terra::vect(pot_char_sf))[,2]
           # Acceptable new elevation - it's within 1 level of difference!
           if(new_elev <= player_current_el() + 1 + floor(player_jump()/2) & new_elev >= player_current_el() - 1){
             char_lat(new_lat)
@@ -276,7 +267,6 @@ server <- function(input, output, session) {
     # Measure new elevation of player
     isolate(
       if(!is.na(char_lat()) & !is.na(char_lng())){
-        # browser()
         player_current_el(
           terra::extract(current_map(),
                          terra::vect(data.frame(lat = char_lat(),
@@ -284,6 +274,7 @@ server <- function(input, output, session) {
                                      geom = c("lng","lat"))
           )[,2]
         )
+        print(player_current_el())
       }
     )
   })
@@ -315,18 +306,26 @@ server <- function(input, output, session) {
       # Then make it a square by finding the bounding box.
       sf::st_bbox() |> sf::st_as_sfc() |> sf::st_as_sf()
   })
-  
-  terrain_colours = terrain.colors(max(terra::values(sm)))
-  terrain_colours[1] <- 'darkblue'
+  # terrain_colours = reactiveVal()
+  # 
+  # observe({
+  #   req(run_plots())
+  #   terrain_colours(terrain.colors(max(terra::values(current_map()))))
+  #   terrain_colours(c('darkblue',terrain_colours()[-1]))
+  # })
   
   # Let's try it with leaflet and leaflet proxy?
   output$leaf_map = renderLeaflet({
     req(run_plots())
     req(!is.na(current_map()))
     
+    terrain_colours = terrain.colors(max(terra::values(current_map())))
+    terrain_colours[1] <- 'darkblue'
+    
     leaflet() |> 
       leaflet::addRasterImage(x = current_map(),
-                              colors = terrain_colours)
+                              colors = terrain_colours()
+                              )
   })
   
   observe({
