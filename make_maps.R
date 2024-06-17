@@ -25,7 +25,7 @@ terra::plot(sm_el)
 
 # Simplify the elevation into bins
 sm_el_s = sm_el
-sm_el_s[] <- cut(sm_el[], 12, labels = F)
+sm_el_s[] <- cut(sm_el[], 10, labels = F)
 sm_el_s
 
 terra::plot(sm_el_s)
