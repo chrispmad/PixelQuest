@@ -1,0 +1,10 @@
+# Establish reactives for character position on map.
+run_plots = reactiveVal(FALSE)
+current_map = reactiveVal(NA)
+char_lat = reactiveVal(NA)
+char_lng = reactiveVal(NA)
+char_x = reactiveVal(NA)
+char_y = reactiveVal(NA)
+pending_move = reactiveVal('none')
+player_current_el = reactiveVal(0)
+player_jump = reactiveVal(0)
