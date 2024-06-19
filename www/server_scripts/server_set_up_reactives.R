@@ -1,5 +1,6 @@
 # Establish reactives for character position on map.
 run_plots = reactiveVal(FALSE)
+pause_game = reactiveVal(FALSE)
 current_map = reactiveVal(NA)
 char_lat = reactiveVal(NA)
 char_lng = reactiveVal(NA)
@@ -8,3 +9,13 @@ char_y = reactiveVal(NA)
 pending_move = reactiveVal('none')
 player_current_el = reactiveVal(0)
 player_jump = reactiveVal(0)
+game_over = reactiveVal(FALSE)
+timer_running = reactiveVal(FALSE)
+
+number_monsters = reactiveVal(1)
+monster_one = reactiveVal(NULL)
+monster_two = reactiveVal(NULL)
+monster_three = reactiveVal(NULL)
+
+goldcoins = reactiveVal(NULL)
+player_points = reactiveVal(0)

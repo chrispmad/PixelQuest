@@ -29,8 +29,11 @@ observe({
 # React to escape key - bring up pause menu
 observe({
   req(input$keys$escape)
+  req(!game_over())
   # The following function is not yet written
   pause_game()
-  run_plots(FALSE)
-  create_menu_window()
+  # run_plots(FALSE)
+  shiny::showModal(
+    shiny::modalDialog(title = 'Paused')
+  )
 })
